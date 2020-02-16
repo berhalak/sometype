@@ -9,6 +9,7 @@
 		"test": "jest",
 		"build": "tsc",
 		"compile": "tsc --noEmit",
+		"main": "ts-node ./src/main.ts",
 		"watch": "jest --watch"
 	},
 	"repository": {

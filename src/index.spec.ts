@@ -36,7 +36,9 @@ test('basics', async () => {
 		}
 	}
 
-	expect(await from("a").map(x => new Upper(x))).toBe("A");
+	const v = from("a").map(x => new Upper(x));
+
+	expect(v.value()).toBe("A");
 })
 
 test('iterables', async () => {

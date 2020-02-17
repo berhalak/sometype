@@ -1,4 +1,4 @@
-import { from, Some } from "./index"
+import { map, Some } from "./index"
 
 function test(name: string, callback: any) {
     return callback().catch(() => {
@@ -18,11 +18,11 @@ function expect(some: any) {
 
 test('basics', async () => {
     // simple map
-    expect(await from("a").map(x => x.toUpperCase())).toBe("A");
+    expect(await map("a").to(x => x.toUpperCase())).toBe("A");
 
     // function use
     function makesUpper(text: Some<string>) {
-        return from(text).map(x => x.toUpperCase());
+        return map(text).to(x => x.toUpperCase());
     }
 
     expect(await makesUpper("a")).toBe("A");

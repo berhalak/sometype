@@ -1,12 +1,12 @@
-import { from, Some } from "./code"
+import { map, Some } from "./index"
 
 test('basics', async () => {
 	// simple map
-	expect(await from("a").map(x => x.toUpperCase())).toBe("A");
+	expect(await map("a").to(x => x.toUpperCase())).toBe("A");
 
 	// function use
 	function makesUpper(text: Some<string>) {
-		return from(text).map(x => x.toUpperCase());
+		return map(text).to(x => x.toUpperCase());
 	}
 
 	expect(await makesUpper("a")).toBe("A");
@@ -18,13 +18,12 @@ test('basics', async () => {
 		}
 
 		value() {
-			return from(this.text)
-				.map(x => x.toUpperCase())
-				.value()
+			return map(this.text)
+				.to(x => x.toUpperCase())
 		}
 	}
 
-	expect(await from("a").map(x => new UpperMonad(x))).toBe("A");
+	expect(await map("a").to(x => new UpperMonad(x))).toBe("A");
 
 	// raw decoratr
 	class Upper {
@@ -37,13 +36,7 @@ test('basics', async () => {
 		}
 	}
 
-	const v = from("a").map(x => new Upper(x));
-
-	expect(v.value()).toBe("A");
-})
-
-test('iterables', async () => {
-	const promA = "a"
-
-	const mon = from(promA).value();
+	const v = map("a").to(x => new Upper(x));
+	const t = await v;
+	expect(t).toBe("A");
 })

@@ -1,19 +1,45 @@
+type Value<T> = { value(): T }
+type Fun<T> = () => T
+type Prom<T> = PromiseLike<T>
 
-type Fun<T> = () => T;
-type Value<T> = { value(): T };
+export type Some<T> = T | Value<T> | Fun<T> | Prom<T> | Value<Prom<T>> | Fun<Prom<T>> | Monad<T>
 
-export type Some<T> = T | PromiseLike<T> | Fun<T> | Fun<PromiseLike<T>> | Value<T> | Value<PromiseLike<T>>;
+type Return<T> =
+	T extends Monad<Some<infer R>> ? R :
+	T extends Prom<Some<infer R>> ? R :
+	T extends Value<Some<infer R>> ? R :
+	T extends Fun<Some<infer R>> ? R :
+	T extends Some<infer R> ? R :
+	never;
 
-type PromToUnit<T> = T extends PromiseLike<infer R> ? R : T;
+const test1: string = {} as any as Return<string>;
+const test2: string = {} as any as Return<() => string>;
+const test3: string = {} as any as Return<{ value(): string }>;
+const test4: string = {} as any as Return<Prom<string>>;
+const test5: string = {} as any as Return<() => Prom<string>>;
+const test6: string = {} as any as Return<{ value(): Prom<string> }>;
+const some1: string = {} as any as Return<Some<string>>;
+const mona1: string = {} as any as Return<Monad<string>>;
+const mona2: string = {} as any as Return<Monad<Some<string>>>;
 
-type Monad<T> = {
-	then<Z>(exp: (item: PromToUnit<T>) => Z, failed?: (reason: any) => any): From<T, Z>
-	map<Z>(exp: (item: PromToUnit<T>) => Z): From<T, Z>;
-	ifNull<Z>(exp: (item: PromToUnit<T>) => Z): From<T, Z>;
-	value(): T;
+
+export type Monad<T> = {
+	to<Z>(bind: (item: T) => Z): Monad<Return<Z>>
+	then<Z>(ok: (item: T) => Z, fail: (reason: any) => any): Monad<Return<Z>>;
 }
 
-type From<T, Z> = T extends PromiseLike<infer R> ? Monad<PromiseLike<SomeToVal<Z>>> : Monad<SomeToVal<Z>>;
+export type From<T> = {
+	where(selector: (item: T) => boolean): From<T>;
+	map<Z>(selector: (item: T) => Z): From<Z>;
+	first(selector?: (item: T) => boolean): T;
+	count(): number;
+}
+
+export function map<T>(item: T):
+	T extends Iterable<infer R> ? T extends string ? Monad<Return<T>> : From<R> :
+	Monad<Return<T>> {
+	return new MonadImpl([item]) as any;
+}
 
 async function process(chain: any[]): Promise<any> {
 	let last = null;
@@ -52,7 +78,7 @@ class MonadImpl<T> {
 
 	}
 
-	map<Z>(exp: (item: T) => Z): any {
+	to<Z>(exp: (item: T) => Z): any {
 		return new MonadImpl([...this.self, exp]);
 	}
 
@@ -63,23 +89,4 @@ class MonadImpl<T> {
 	then(ok: (item: T) => any, failed?: (reason: any) => any) {
 		return this.eval().then(ok, failed);
 	}
-}
-
-
-type SomeToVal<T> =
-	T extends PromiseLike<infer R> ? PromiseLike<R> :
-	T extends Fun<infer R> ? R :
-	T extends Value<infer R> ? R :
-	T
-
-type PickMonad<T> = T extends Some<infer R> ?
-	R extends PromiseLike<infer Z> ? Monad<PromiseLike<Z>> : never
-	: never;
-
-export function from<T>(item: T): PickMonad<T> {
-	return {} as any;
-}
-
-function test(ww: Some<string>) {
-	return from(ww).value();
 }

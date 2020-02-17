@@ -4,7 +4,7 @@ type Prom<T> = PromiseLike<T>
 
 export type Some<T> = T | Value<T> | Fun<T> | Prom<T> | Value<Prom<T>> | Fun<Prom<T>>
 
-type Mod<T> =
+type LiftedToUnit<T> =
 	T extends Prom<infer R> ? R :
 	T extends Value<Prom<infer R>> ? R :
 	T extends Fun<Prom<infer R>> ? R :
@@ -19,28 +19,19 @@ type IsAsync<T> = T extends Prom<infer R> ? never :
 type Async<T> = Prom<T> | Value<Prom<T>> | Fun<Prom<T>>;
 type Sync<T> = T | Value<T> | Fun<T>;
 
-type Unwrap<T> = Mod<T> extends never ? T : Mod<T>;
+type Unwrap<T> = LiftedToUnit<T> extends never ? T : LiftedToUnit<T>;
 
-type Return<T> =
-	HasProm<T> extends never ? Unwrap<T> : HasProm<T>;
+type RemoveSync<T> = Exclude<T, Sync<Unwrap<T>>>;
 
-type iii = true extends never ? 1 : 2
-type ass = IsAsync<string>
-type www = Unwrap<string>
-type ret = Return<string>
-type ttt = Return<Promise<String>>
+type Return<T> = RemoveSync<T> extends never ? Unwrap<T> : Prom<Unwrap<T>>;
 
-type zzz = HasProm<string>
-
-type some = Some<string>
-
-
-type z1 = Unwrap<some>
-type z12 = Return<some>
-
-type HasProm<T> = Extract<T, Unwrap<T> | Prom<Unwrap<T>>> extends Unwrap<T> ? never : Prom<Unwrap<T>>;
-type testIsSome = HasProm<Some<string>>
-type testIsString = HasProm<string>
+const test1: string = {} as any as Return<string>;
+const test2: string = {} as any as Return<() => string>;
+const test3: string = {} as any as Return<{ value(): string }>;
+const test4: Prom<string> = {} as any as Return<Prom<string>>;
+const test5: Prom<string> = {} as any as Return<() => Prom<string>>;
+const test6: Prom<string> = {} as any as Return<{ value(): Prom<string> }>;
+const some1: Prom<string> = {} as any as Return<Some<string>>;
 
 
 

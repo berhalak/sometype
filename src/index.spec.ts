@@ -1,4 +1,4 @@
-import { from, Some } from "./index"
+import { from, Some } from "./code"
 
 test('basics', async () => {
 	// simple map
@@ -19,7 +19,8 @@ test('basics', async () => {
 
 		value() {
 			return from(this.text)
-				.map(x => x.toUpperCase());
+				.map(x => x.toUpperCase())
+				.value()
 		}
 	}
 

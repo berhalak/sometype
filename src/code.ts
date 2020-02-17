@@ -5,6 +5,7 @@ type Prom<T> = PromiseLike<T>
 export type Some<T> = T | Value<T> | Fun<T> | Prom<T> | Value<Prom<T>> | Fun<Prom<T>>
 
 type LiftedToUnit<T> =
+	T extends Monad<infer R> ? R :
 	T extends Prom<infer R> ? R :
 	T extends Value<Prom<infer R>> ? R :
 	T extends Fun<Prom<infer R>> ? R :
@@ -33,6 +34,19 @@ const test5: Prom<string> = {} as any as Return<() => Prom<string>>;
 const test6: Prom<string> = {} as any as Return<{ value(): Prom<string> }>;
 const some1: Prom<string> = {} as any as Return<Some<string>>;
 
+type Unit<T> = T extends Prom<infer R> ? R : T;
+
+type From<T, Z> = T extends Prom<infer R> ? Monad<Prom<Unwrap<Z>>> : Monad<Unwrap<Z>>
+
+export type Monad<T> = {
+	map<Z>(bind: (item: Unit<T>) => Z): From<T, Z>
+	value(): T;
+	then<Z>(ok: (item: Unit<T>) => Z, fail: (reason: any) => any): From<T, Z>;
+}
+
+export function from<T>(item: T): Monad<Return<T>> {
+	return {} as any;
+}
 
 
 

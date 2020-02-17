@@ -6,7 +6,7 @@ npm install sometype
 ``` ts
 
 function makeUpper(text : Some<string>){
-    return from(text).map(x=> x.toUpperCase());
+    return map(text).to(x=> x.toUpperCase());
 }
 
 expect(await makeUpper("a")).toBe("A");

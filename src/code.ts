@@ -1,6 +1,7 @@
 type Value<T> = { value(): T }
 type Fun<T> = () => T
 type Prom<T> = PromiseLike<T>
+
 export type Some<T> = T | Value<T> | Fun<T> | Prom<T> | Value<Prom<T>> | Fun<Prom<T>>
 
 type Mod<T> =

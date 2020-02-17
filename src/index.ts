@@ -1,54 +1,19 @@
-type Monad<T> = {
-	then<Z>(exp: (item: T) => Z, failed?: (reason: any) => any): PickMonad<Z>
-	map<Z>(exp: (item: T) => Z): PickMonad<Z>;
-	ifNull<Z>(exp: (item: T) => Z): PickMonad<Z>;
-	value(): T;
-	// where(filter: (item: PickElement<T>) => boolean): Monad<T>;
-	// select<Z>(filter: (item: PickElement<T>) => Z): Monad<Array<Z>>;
-	// first(filter?: (item: PickElement<T>) => boolean): Monad<PickElement<T>>;
-}
 
-type PickElement<T> = T extends Array<infer R> ? R : never;
-type Value<T> = { value(): T }
 type Fun<T> = () => T;
-type Flat<T> = T extends Monad<infer R> ? R : T;
-export type Some<T> = T | Value<T> | Fun<T> | Monad<T> | PromiseLike<T>;
+type Value<T> = { value(): T };
 
-type Future<T> = {
-	then<Z>(exp: (item: T) => Z, failed?: (reason: any) => any): PickFuture<Z>
-	map<Z>(exp: (item: T) => Z): PickFuture<Z>;
-	ifNull<Z>(exp: (item: T) => Z): PickFuture<Z>;
-	value(): PromiseLike<T>;
-	// where(filter: (item: PickElement<T>) => boolean): Monad<T>;
-	// select<Z>(filter: (item: PickElement<T>) => Z): Monad<Array<Z>>;
-	// first(filter?: (item: PickElement<T>) => boolean): Monad<PickElement<T>>;
+export type Some<T> = T | PromiseLike<T> | Fun<T> | Fun<PromiseLike<T>> | Value<T> | Value<PromiseLike<T>>;
+
+type PromToUnit<T> = T extends PromiseLike<infer R> ? R : T;
+
+type Monad<T> = {
+	then<Z>(exp: (item: PromToUnit<T>) => Z, failed?: (reason: any) => any): From<T, Z>
+	map<Z>(exp: (item: PromToUnit<T>) => Z): From<T, Z>;
+	ifNull<Z>(exp: (item: PromToUnit<T>) => Z): From<T, Z>;
+	value(): T;
 }
 
-type IsProm<T> = T extends PromiseLike<infer R> ? never : T;
-
-// T is some
-type PickMonad<T> = IsProm<SomeValue<T>> extends never ? Monad<PickUnit<T>> : Future<PickUnit<T>>;
-
-type PickFuture<T> =
-	T extends Monad<infer R> ? Future<Flat<R>> :
-	T extends Value<infer R> ? Future<Flat<R>> :
-	T extends Promise<infer R> ? Future<Flat<R>> :
-	T extends Fun<infer R> ? Future<Flat<R>> :
-	Future<T>;
-
-type PickUnit<T> =
-	T extends Value<PromiseLike<infer R>> ? PromiseLike<SomeValue<R>> :
-	T extends Fun<PromiseLike<infer R>> ? PromiseLike<R> :
-	T extends PromiseLike<infer R> ? PromiseLike<R> :
-	T extends Value<infer R> ? R :
-	T extends Fun<infer R> ? R :
-	SomeValue<T>;
-
-type Almost<T> = T extends Some<infer R> ? R extends T ? (
-	R extends T ? never : R
-) : PromiseLike<R> : T;
-
-type SomeValue<T> = Almost<T> extends never ? T : (Almost<T> extends PromiseLike<infer R> ? PromiseLike<R> : Almost<T>)
+type From<T, Z> = T extends PromiseLike<infer R> ? Monad<PromiseLike<SomeToVal<Z>>> : Monad<SomeToVal<Z>>;
 
 async function process(chain: any[]): Promise<any> {
 	let last = null;
@@ -82,13 +47,13 @@ async function process(chain: any[]): Promise<any> {
 	return last;
 }
 
-class From<T> {
+class MonadImpl<T> {
 	constructor(private self: any[]) {
 
 	}
 
 	map<Z>(exp: (item: T) => Z): any {
-		return new From([...this.self, exp]);
+		return new MonadImpl([...this.self, exp]);
 	}
 
 	async eval() {
@@ -100,11 +65,21 @@ class From<T> {
 	}
 }
 
-function from<T>(item: Some<T>): PickMonad<SomeValue<T>> {
-	return new From([item]) as any;
+
+type SomeToVal<T> =
+	T extends PromiseLike<infer R> ? PromiseLike<R> :
+	T extends Fun<infer R> ? R :
+	T extends Value<infer R> ? R :
+	T
+
+type PickMonad<T> = T extends Some<infer R> ?
+	R extends PromiseLike<infer Z> ? Monad<PromiseLike<Z>> : never
+	: never;
+
+export function from<T>(item: T): PickMonad<T> {
+	return {} as any;
 }
 
-
-export {
-	from
+function test(ww: Some<string>) {
+	return from(ww).value();
 }

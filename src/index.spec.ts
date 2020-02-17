@@ -42,5 +42,7 @@ test('basics', async () => {
 })
 
 test('iterables', async () => {
-	//from([1, 2, 3]).where(x => x > 2).toArray();
+	const promA = "a"
+
+	const mon = from(promA).value();
 })

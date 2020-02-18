@@ -39,4 +39,17 @@ test('basics', async () => {
 	const v = map("a").to(x => new Upper(x));
 	const t = await v;
 	expect(t).toBe("A");
+
+
+	let wasFinal = false;
+
+	await map("a").to(x => "b").finally(x => wasFinal = true);
+
+	expect(wasFinal).toBe(true);
+
+	wasFinal = false;
+
+	await map("a").to(x => { throw new Error("error") }).catch(x => wasFinal = true);
+
+	expect(wasFinal).toBe(true);
 })

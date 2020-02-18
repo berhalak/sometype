@@ -2,7 +2,10 @@ type Value<T> = { value(): T }
 type Fun<T> = () => T
 type Prom<T> = PromiseLike<T>
 
-export type Some<T> = T | Value<T> | Fun<T> | Prom<T> | Value<Prom<T>> | Fun<Prom<T>> | Monad<T>
+type Mod<T> = Value<T> | Fun<T>
+type Unit<T> = T | Prom<T> | Monad<T>
+
+export type Some<T> = Unit<T> | Mod<Unit<T>>
 
 type Return<T> =
 	T extends Monad<Some<infer R>> ? R :
@@ -25,19 +28,13 @@ const mona2: string = {} as any as Return<Monad<Some<string>>>;
 
 export type Monad<T> = {
 	to<Z>(bind: (item: T) => Z): Monad<Return<Z>>
+	map<Z>(bind: (item: T) => Z): Monad<Z>
+	do(action: (item: T) => any): Monad<T>
 	then<Z>(ok: (item: T) => Z, fail: (reason: any) => any): Monad<Return<Z>>;
 }
 
-export type From<T> = {
-	where(selector: (item: T) => boolean): From<T>;
-	map<Z>(selector: (item: T) => Z): From<Z>;
-	first(selector?: (item: T) => boolean): T;
-	count(): number;
-}
 
-export function map<T>(item: T):
-	T extends Iterable<infer R> ? T extends string ? Monad<Return<T>> : From<R> :
-	Monad<Return<T>> {
+export function map<T>(item: T): Monad<Return<T>> {
 	return new MonadImpl([item]) as any;
 }
 
@@ -81,6 +78,7 @@ class MonadImpl<T> {
 	to<Z>(exp: (item: T) => Z): any {
 		return new MonadImpl([...this.self, exp]);
 	}
+
 
 	async eval() {
 		return await process(this.self);

@@ -53,3 +53,19 @@ test('basics', async () => {
 
 	expect(wasFinal).toBe(true);
 })
+
+
+test('promisses', async () => {
+	const a = await map(Promise.resolve("a")).to(x => x.toUpperCase());
+	expect(a).toBe("A");
+})
+
+test('decorators', async () => {
+	const a = await map({ value() { return "a" } }).to(x => x.toUpperCase());
+	expect(a).toBe("A");
+})
+
+test('empty values', async () => {
+	const a = await map({ value() { return null as string } }).to(x => x.toUpperCase());
+	expect(a).toBeNull();
+})

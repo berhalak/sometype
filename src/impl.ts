@@ -3,6 +3,10 @@ async function process(chain: any[]): Promise<any> {
 	for (let i = 0; i < chain.length; i++) {
 		let self = chain[i];
 
+		if (i == 0) {
+			self = await flat(self);
+		}
+
 		if (i != 0) {
 			self = self(last);
 		}
@@ -70,13 +74,13 @@ export class MonadImpl<T> {
 
 async function flat(self: any) {
 	if (typeof self == 'object' && self) {
-		while (self.then) {
+		while (self?.then) {
 			self = await self
 		}
-		if (typeof self == 'object' && typeof self.value == 'function') {
+		if (typeof self == 'object' && typeof self?.value == 'function') {
 			self = self.value()
 		}
-		if (typeof self == 'object' && self.value !== undefined) {
+		if (typeof self == 'object' && self?.value !== undefined) {
 			self = self.value
 		}
 	}
